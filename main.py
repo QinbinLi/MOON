@@ -271,9 +271,8 @@ def train_net_fedcon(net_id, net, global_net, previous_nets, train_dataloader, t
     criterion = nn.CrossEntropyLoss().cuda()
     # global_net.to(device)
 
-    if args.loss == 'contrastive':
-        for previous_net in previous_nets:
-            previous_net.cuda()
+    for previous_net in previous_nets:
+        previous_net.cuda()
     global_w = global_net.state_dict()
 
     cnt = 0
@@ -328,9 +327,9 @@ def train_net_fedcon(net_id, net, global_net, previous_nets, train_dataloader, t
         epoch_loss2 = sum(epoch_loss2_collector) / len(epoch_loss2_collector)
         logger.info('Epoch: %d Loss: %f Loss1: %f Loss2: %f' % (epoch, epoch_loss, epoch_loss1, epoch_loss2))
 
-    if args.loss == 'contrastive':
-        for previous_net in previous_nets:
-            previous_net.to('cpu')
+
+    for previous_net in previous_nets:
+        previous_net.to('cpu')
     train_acc, _ = compute_accuracy(net, train_dataloader, device=device)
     test_acc, conf_matrix, _ = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
@@ -534,23 +533,23 @@ if __name__ == '__main__':
             logger.info('>> Global Model Test accuracy: %f' % test_acc)
             logger.info('>> Global Model Train loss: %f' % train_loss)
 
-            if args.loss != 'l2norm':
-                if len(old_nets_pool) < args.model_buffer_size:
-                    old_nets = copy.deepcopy(nets)
-                    for _, net in old_nets.items():
-                        net.eval()
-                        for param in net.parameters():
-                            param.requires_grad = False
-                    old_nets_pool.append(old_nets)
-                elif args.pool_option == 'FIFO':
-                    old_nets = copy.deepcopy(nets)
-                    for _, net in old_nets.items():
-                        net.eval()
-                        for param in net.parameters():
-                            param.requires_grad = False
-                    for i in range(args.model_buffer_size-2, -1, -1):
-                        old_nets_pool[i] = old_nets_pool[i+1]
-                    old_nets_pool[args.model_buffer_size - 1] = old_nets
+
+            if len(old_nets_pool) < args.model_buffer_size:
+                old_nets = copy.deepcopy(nets)
+                for _, net in old_nets.items():
+                    net.eval()
+                    for param in net.parameters():
+                        param.requires_grad = False
+                old_nets_pool.append(old_nets)
+            elif args.pool_option == 'FIFO':
+                old_nets = copy.deepcopy(nets)
+                for _, net in old_nets.items():
+                    net.eval()
+                    for param in net.parameters():
+                        param.requires_grad = False
+                for i in range(args.model_buffer_size-2, -1, -1):
+                    old_nets_pool[i] = old_nets_pool[i+1]
+                old_nets_pool[args.model_buffer_size - 1] = old_nets
 
             mkdirs(args.modeldir+'fedcon/')
             if args.save_model:
