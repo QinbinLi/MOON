@@ -113,10 +113,8 @@ def train_net(net_id, net, train_dataloader, test_dataloader, epochs, lr, args_o
     logger.info('n_test: %d' % len(test_dataloader))
 
     train_acc,_ = compute_accuracy(net, train_dataloader, device=device)
-    if args.dataset == 'xray':
-        test_acc, conf_matrix, _ = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device, multiloader=True)
-    else:
-        test_acc, conf_matrix,_ = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
+
+    test_acc, conf_matrix,_ = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
     logger.info('>> Pre-Training Training accuracy: {}'.format(train_acc))
     logger.info('>> Pre-Training Test accuracy: {}'.format(test_acc))
@@ -185,11 +183,7 @@ def train_net_fedprox(net_id, net, global_net, train_dataloader, test_dataloader
     logger.info('n_test: %d' % len(test_dataloader))
 
     train_acc, _ = compute_accuracy(net, train_dataloader, device=device)
-    if args.dataset == 'xray':
-        test_acc, conf_matrix, _ = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device,
-                                                    multiloader=True)
-    else:
-        test_acc, conf_matrix, _ = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
+    test_acc, conf_matrix, _ = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
     logger.info('>> Pre-Training Training accuracy: {}'.format(train_acc))
     logger.info('>> Pre-Training Test accuracy: {}'.format(test_acc))
@@ -258,11 +252,8 @@ def train_net_fedcon(net_id, net, global_net, previous_nets, train_dataloader, t
     logger.info('n_test: %d' % len(test_dataloader))
 
     train_acc, _ = compute_accuracy(net, train_dataloader, device=device)
-    if args.dataset == 'xray':
-        test_acc, conf_matrix, _ = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device,
-                                                    multiloader=True)
-    else:
-        test_acc, conf_matrix, _ = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
+
+    test_acc, conf_matrix, _ = compute_accuracy(net, test_dataloader, get_confusion_matrix=True, device=device)
 
     logger.info('>> Pre-Training Training accuracy: {}'.format(train_acc))
     logger.info('>> Pre-Training Test accuracy: {}'.format(test_acc))
@@ -360,16 +351,11 @@ def local_train_net(nets, args, net_dataidx_map, train_dl=None, test_dl=None, gl
         server_c_collector = list(server_c.cuda().parameters())
         new_server_c_collector = copy.deepcopy(server_c_collector)
     for net_id, net in nets.items():
-        if args.dataset == 'xray':
-            train_dl_local = train_dl[net_id]
-        elif args.dataset == 'femnist' or args.dataset == 'celeba':
-            train_dl_local = train_dl[net_id]
-        else:
-            dataidxs = net_dataidx_map[net_id]
+        dataidxs = net_dataidx_map[net_id]
 
-            logger.info("Training network %s. n_training: %d" % (str(net_id), len(dataidxs)))
-            train_dl_local, test_dl_local, _, _ = get_dataloader(args.dataset, args.datadir, args.batch_size, 32, dataidxs)
-            train_dl_global, test_dl_global, _, _ = get_dataloader(args.dataset, args.datadir, args.batch_size, 32)
+        logger.info("Training network %s. n_training: %d" % (str(net_id), len(dataidxs)))
+        train_dl_local, test_dl_local, _, _ = get_dataloader(args.dataset, args.datadir, args.batch_size, 32, dataidxs)
+        train_dl_global, test_dl_global, _, _ = get_dataloader(args.dataset, args.datadir, args.batch_size, 32)
         n_epoch = args.epochs
 
         if args.alg == 'fedavg':
@@ -587,12 +573,8 @@ if __name__ == '__main__':
             for net in nets_this_round.values():
                 net.load_state_dict(global_w)
 
-            if args.dataset == 'femnist' or args.dataset == 'celeba':
-                total_data_points = sum([net_dataidx_map[r] for r in party_list_this_round])
-                fed_avg_freqs = [1.0 * net_dataidx_map[r] / total_data_points for r in party_list_this_round]
-            else:
-                total_data_points = sum([len(net_dataidx_map[r]) for r in range(args.n_parties)])
-                fed_avg_freqs = [len(net_dataidx_map[r]) / total_data_points for r in range(args.n_parties)]
+            total_data_points = sum([len(net_dataidx_map[r]) for r in range(args.n_parties)])
+            fed_avg_freqs = [len(net_dataidx_map[r]) / total_data_points for r in range(args.n_parties)]
 
             for net_id, net in enumerate(nets_this_round.values()):
                 net_para = net.state_dict()
@@ -617,20 +599,12 @@ if __name__ == '__main__':
             #logger.info('global n_training: %d' % len(train_dl_global))
             logger.info('global n_test: %d' % len(test_dl))
             global_model.cuda()
-            if args.dataset == 'femnist' or args.dataset == 'celeba':
-                train_acc, train_loss = compute_accuracy(global_model, train_dls, device=device, multiloader=1)
-                test_acc, conf_matrix, _ = compute_accuracy(global_model, test_dl, get_confusion_matrix=True, device=device)
+            train_acc, train_loss = compute_accuracy(global_model, train_dl_global, device=device)
+            test_acc, conf_matrix, _ = compute_accuracy(global_model, test_dl, get_confusion_matrix=True, device=device)
 
-                logger.info('>> Global Model Train accuracy: %f' % train_acc)
-                logger.info('>> Global Model Test accuracy: %f' % test_acc)
-                logger.info('>> Global Model Train loss: %f' % train_loss)
-            else:
-                train_acc, train_loss = compute_accuracy(global_model, train_dl_global, device=device)
-                test_acc, conf_matrix, _ = compute_accuracy(global_model, test_dl, get_confusion_matrix=True, device=device)
-
-                logger.info('>> Global Model Train accuracy: %f' % train_acc)
-                logger.info('>> Global Model Test accuracy: %f' % test_acc)
-                logger.info('>> Global Model Train loss: %f' % train_loss)
+            logger.info('>> Global Model Train accuracy: %f' % train_acc)
+            logger.info('>> Global Model Test accuracy: %f' % test_acc)
+            logger.info('>> Global Model Train loss: %f' % train_loss)
             mkdirs(args.modeldir+'fedavg/')
             global_model.to('cpu')
 
