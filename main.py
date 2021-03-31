@@ -572,6 +572,8 @@ if __name__ == '__main__':
             for net in nets_this_round.values():
                 net.load_state_dict(global_w)
 
+            local_train_net(nets_this_round, args, net_dataidx_map, train_dl=train_dl, test_dl=test_dl, device=device)
+
             total_data_points = sum([len(net_dataidx_map[r]) for r in range(args.n_parties)])
             fed_avg_freqs = [len(net_dataidx_map[r]) / total_data_points for r in range(args.n_parties)]
 
