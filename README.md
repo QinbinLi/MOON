@@ -52,7 +52,16 @@ python main.py --dataset=cifar10 \
     --datadir='./data/' \
 ```
 
+## Tiny-ImageNet
+You can download Tiny-ImageNet [here](http://cs231n.stanford.edu/tiny-imagenet-200.zip). Then, you can follow the [instructions](https://github.com/AI-secure/DBA/blob/master/utils/tinyimagenet_reformat.py) to reformat the validation folder.
+
+## Hyperparameters
+If you use the same setting as our papers, you can simply adopt the hyperparameters reported in our paper. If you try a setting different from our paper, please tune the hyperparameters of MOON. You may tune mu from \{0.001, 0.01, 0.1, 1, 5, 10\}. If you have sufficient computing resources, you may also tune temperature from \{0.1, 0.5, 1.0\} and the output dimension of projection head from \{64, 128, 256\}. 
+
+
+
 ## Citation
+
 Please cite our paper if you find this code useful for your research.
 ```
 @inproceedings{li2021model,
