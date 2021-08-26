@@ -137,7 +137,7 @@ def train_net(net_id, net, train_dataloader, test_dataloader, epochs, lr, args_o
             x, target = x.cuda(), target.cuda()
 
             optimizer.zero_grad()
-            x.requires_grad = True
+            x.requires_grad = False
             target.requires_grad = False
             target = target.long()
 
@@ -209,7 +209,7 @@ def train_net_fedprox(net_id, net, global_net, train_dataloader, test_dataloader
             x, target = x.cuda(), target.cuda()
 
             optimizer.zero_grad()
-            x.requires_grad = True
+            x.requires_grad = False
             target.requires_grad = False
             target = target.long()
 
@@ -287,7 +287,7 @@ def train_net_fedcon(net_id, net, global_net, previous_nets, train_dataloader, t
             x, target = x.cuda(), target.cuda()
 
             optimizer.zero_grad()
-            x.requires_grad = True
+            x.requires_grad = False
             target.requires_grad = False
             target = target.long()
 
