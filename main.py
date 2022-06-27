@@ -574,8 +574,8 @@ if __name__ == '__main__':
 
             local_train_net(nets_this_round, args, net_dataidx_map, train_dl=train_dl, test_dl=test_dl, device=device)
 
-            total_data_points = sum([len(net_dataidx_map[r]) for r in range(args.n_parties)])
-            fed_avg_freqs = [len(net_dataidx_map[r]) / total_data_points for r in range(args.n_parties)]
+            total_data_points = sum([len(net_dataidx_map[r]) for r in party_list_this_round])
+            fed_avg_freqs = [len(net_dataidx_map[r]) / total_data_points for r in party_list_this_round]
 
             for net_id, net in enumerate(nets_this_round.values()):
                 net_para = net.state_dict()
